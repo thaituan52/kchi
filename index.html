@@ -340,41 +340,37 @@
                 id: 'yellow',
                 name: 'Vàng Hoa Hòe',
                 source: 'Sắc vàng ấm chiết xuất từ nụ hoa hòe phơi khô chưng cất',
-                colorCode: '#e5aa1c',
-                icon: '🌼',
-                // Seed points (pixel coords in mocban.png) of the enclosed areas this colour fills
-                regions: [[288, 26], [338, 594], [370, 313], [90, 294], [362, 262]]
+                colorCode: '#e8b83a',
+                icon: '🌼'
             },
             {
                 id: 'red',
                 name: 'Đỏ Son Sỏi',
                 source: 'Màu đỏ tự nhiên từ đá sỏi đỏ núi rừng hoặc khoáng son củ',
-                colorCode: '#c0392b',
-                icon: '🪨',
-                regions: [[94, 429], [120, 370], [226, 346], [312, 683], [95, 270], [454, 572], [443, 573], [89, 355]]
+                colorCode: '#8e2a22',
+                icon: '🪨'
             },
             {
                 id: 'green',
                 name: 'Xanh Lá Chàm',
                 source: 'Màu xanh mát dịu từ lá chàm ngâm trộn hạt dành dành',
-                colorCode: '#1b4d3e',
-                icon: '🌿',
-                regions: [[425, 188], [198, 217], [203, 508], [67, 216], [406, 473], [408, 469], [425, 498], [111, 367]]
+                colorCode: '#3f7a33',
+                icon: '🌿'
             },
             {
                 id: 'pink',
                 name: 'Hồng Da Thịt',
                 source: 'Màu hồng phấn nhẹ nhàng pha từ bột điệp nướng với chút son đỏ',
-                colorCode: '#f3b2a6',
-                icon: '🐚',
-                regions: [[359, 44], [289, 33], [238, 459], [292, 456], [123, 126], [107, 182], [129, 211]]
+                colorCode: '#f5dcd3',
+                icon: '🐚'
             },
             {
                 id: 'black',
                 name: 'Nét Đen Than Lá Tre',
                 source: 'Thắng từ than lá tre cô đặc, dập nét mộc bản cuối cùng để định hình thần thái',
-                colorCode: '#1a1917',
+                colorCode: '#1e1c1a',
                 icon: '🎋',
+                // Prints the solid black areas from the colour map, then the line art on top
                 isLineArt: true
             }
         ];
@@ -388,8 +384,6 @@
             isComplete: false
         };
 
-        // Pixels darker than this in mocban.png count as the black outline
-        const LINE_THRESHOLD = 170;
         let layerCanvases = null;
         let paperTexture = null;
 
@@ -408,7 +402,10 @@
         const exportArtBtn = document.getElementById('exportArtBtn');
 
         const artworkImage = new Image();
-        artworkImage.onload = () => {
+        const colorMapImage = new Image();
+        let imagesLoaded = 0;
+        const onImageLoaded = () => {
+            if (++imagesLoaded < 2) return;
             try {
                 layerCanvases = buildLayerCanvases();
             } catch (err) {
@@ -418,76 +415,40 @@
             }
             redrawMainCanvas();
         };
+        artworkImage.onload = onImageLoaded;
+        colorMapImage.onload = onImageLoaded;
         artworkImage.onerror = () => {
             canvasGuideText.textContent = '⚠ Không tải được ảnh mocban.png';
         };
+        colorMapImage.onerror = () => {
+            canvasGuideText.textContent = '⚠ Không tải được ảnh mausac.png';
+        };
         artworkImage.src = window.MOCBAN_DATA_URL || 'mocban.png';
+        colorMapImage.src = window.MAUSAC_DATA_URL || 'mausac.png';
 
         function hexToRgb(hex) {
             const n = parseInt(hex.slice(1), 16);
             return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
         }
 
-        function floodFill(walls, mask, W, H, start) {
-            if (walls[start] || mask[start]) return;
-            const stack = [start];
-            mask[start] = 1;
-            while (stack.length) {
-                const p = stack.pop();
-                const x = p % W;
-                if (x > 0 && !walls[p - 1] && !mask[p - 1]) { mask[p - 1] = 1; stack.push(p - 1); }
-                if (x < W - 1 && !walls[p + 1] && !mask[p + 1]) { mask[p + 1] = 1; stack.push(p + 1); }
-                if (p >= W && !walls[p - W] && !mask[p - W]) { mask[p - W] = 1; stack.push(p - W); }
-                if (p < W * (H - 1) && !walls[p + W] && !mask[p + W]) { mask[p + W] = 1; stack.push(p + W); }
-            }
-        }
-
-        function growMask(mask, W, H, steps) {
-            let cur = mask;
-            for (let s = 0; s < steps; s++) {
-                const next = new Uint8Array(cur);
-                for (let y = 1; y < H - 1; y++) {
-                    for (let x = 1; x < W - 1; x++) {
-                        const i = y * W + x;
-                        if (cur[i]) { next[i - 1] = next[i + 1] = next[i - W] = next[i + W] = 1; }
-                    }
-                }
-                cur = next;
-            }
-            return cur;
-        }
-
-        // Each colour layer fills the enclosed areas of the line art that contain its seed points
+        // mausac.png is a colour map traced from the reference painting tranh-dong-ho-09.jpg:
+        // each pixel's red channel is (pigment index + 1) * 40, transparent where the paper shows
         function buildLayerCanvases() {
-            const W = artworkImage.naturalWidth, H = artworkImage.naturalHeight;
+            const W = colorMapImage.naturalWidth, H = colorMapImage.naturalHeight;
             const src = document.createElement('canvas');
             src.width = W; src.height = H;
             const sctx = src.getContext('2d');
-            sctx.drawImage(artworkImage, 0, 0);
+            sctx.drawImage(colorMapImage, 0, 0);
             const px = sctx.getImageData(0, 0, W, H).data;
 
-            // Outline thickened by 1px so small gaps in the lines don't let colour leak out
-            const line = new Uint8Array(W * H);
-            for (let i = 0; i < W * H; i++) {
-                const lum = (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2]) / 3;
-                line[i] = (px[i * 4 + 3] > 0 && lum < LINE_THRESHOLD) ? 1 : 0;
-            }
-            const walls = growMask(line, W, H, 1);
-
-            return DONG_HO_PIGMENTS.map(pigment => {
-                if (!pigment.regions) return null;
-                const mask = new Uint8Array(W * H);
-                pigment.regions.forEach(([x, y]) => floodFill(walls, mask, W, H, y * W + x));
-                // Grow back under the outline so no paper gap shows between colour and line
-                const filled = growMask(mask, W, H, 2);
-
+            return DONG_HO_PIGMENTS.map((pigment, idx) => {
                 const layer = document.createElement('canvas');
                 layer.width = W; layer.height = H;
                 const lctx = layer.getContext('2d');
                 const img = lctx.createImageData(W, H);
                 const [r, g, b] = hexToRgb(pigment.colorCode);
                 for (let i = 0; i < W * H; i++) {
-                    if (!filled[i]) continue;
+                    if (px[i * 4 + 3] < 128 || Math.round(px[i * 4] / 40) !== idx + 1) continue;
                     // Slight unevenness, like ink pressed from a woodblock
                     const grain = 0.88 + Math.random() * 0.12;
                     img.data[i * 4] = r;
@@ -729,16 +690,12 @@
             DONG_HO_PIGMENTS.forEach((pigment, idx) => {
                 if (!state.printedLayers[idx]) return;
                 if (respectToggles && !state.layerToggles[idx]) return;
-                let source = null;
-                if (pigment.isLineArt) {
-                    if (artworkImage.complete && artworkImage.naturalWidth) source = artworkImage;
-                } else if (layerCanvases) {
-                    source = layerCanvases[idx];
-                }
-                if (!source) return;
+                const sources = [];
+                if (layerCanvases) sources.push(layerCanvases[idx]);
+                if (pigment.isLineArt && artworkImage.complete && artworkImage.naturalWidth) sources.push(artworkImage);
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
-                ctx.drawImage(source, 0, 0, w, h);
+                sources.forEach(source => ctx.drawImage(source, 0, 0, w, h));
                 ctx.restore();
             });
         }
