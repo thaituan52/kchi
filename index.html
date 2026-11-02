@@ -125,10 +125,10 @@
             </button>
         </div>
 
-        <div class="hidden md:flex items-center space-x-2">
+        <div class="flex items-center space-x-2 mt-2 sm:mt-0">
             <button id="audioToggleBtn" class="p-2 px-3 rounded-lg bg-amber-950/80 border border-amber-800 hover:bg-amber-900 text-amber-300 text-xs flex items-center gap-1.5 transition">
                 <i class="fas fa-volume-up text-amber-400" id="audioIcon"></i>
-                <span id="audioText">Âm thanh</span>
+                <span id="audioText" class="hidden sm:inline">Âm thanh</span>
             </button>
         </div>
     </header>
@@ -187,7 +187,7 @@
                     <div class="absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 border-amber-500/70"></div>
 
                     <div id="paperCanvasBase" class="paper-diep rounded-xl overflow-hidden border border-amber-900/40 relative cursor-crosshair flex items-center justify-center shadow-inner">
-                        <canvas id="mainCanvas" width="480" height="640" class="w-full max-w-[460px] h-auto block relative z-10"></canvas>
+                        <canvas id="mainCanvas" width="555" height="768" class="w-full max-w-[460px] h-auto block relative z-10"></canvas>
 
                         <!-- Floating 3D Stamp Overlay -->
                         <div id="floatingWoodblock" class="woodblock-3d absolute pointer-events-none hidden z-30 transition-opacity duration-200 opacity-90" style="width: 140px; height: 180px;">
@@ -243,10 +243,10 @@
                 <div class="bg-[#2a170b] border-4 border-[#1c0e07] rounded-2xl p-4 shadow-2xl w-full max-w-[500px]">
                     <div class="text-xs text-amber-300/80 mb-2 flex justify-between items-center">
                         <span>Rê chuột/Chạm tay để đục ván gỗ</span>
-                        <span class="text-amber-400 font-bold"><i class="fas fa-chisel"></i> Công cụ: Đục Thẳng</span>
+                        <span class="text-amber-400 font-bold"><i class="fas fa-hammer"></i> Công cụ: Đục Thẳng</span>
                     </div>
                     <div class="relative overflow-hidden rounded-xl border-2 border-amber-800/80 shadow-2xl chisel-cursor bg-amber-950">
-                        <canvas id="carveCanvas" width="480" height="600" class="w-full h-auto block"></canvas>
+                        <canvas id="carveCanvas" width="480" height="600" class="w-full h-auto block touch-none"></canvas>
                     </div>
                 </div>
             </section>
@@ -263,6 +263,9 @@
     <footer class="bg-wood-pattern border-t border-amber-900/80 py-3 text-center text-xs text-amber-400/60">
         Xưởng Chế Tác Tranh Dân Gian Đông Hồ &copy; Di Sản Văn Hóa Phi Vật Thể Việt Nam
     </footer>
+
+    <!-- Line art as a data URL, so colouring works even when opened from disk -->
+    <script src="mocban-data.js"></script>
 
     <!-- MAIN JAVASCRIPT SIMULATION LOGIC -->
     <script>
@@ -339,13 +342,8 @@
                 source: 'Sắc vàng ấm chiết xuất từ nụ hoa hòe phơi khô chưng cất',
                 colorCode: '#e5aa1c',
                 icon: '🌼',
-                draw: (ctx, w, h) => {
-                    ctx.fillStyle = '#e5aa1c';
-                    ctx.beginPath();
-                    ctx.ellipse(w * 0.38, h * 0.58, w * 0.18, h * 0.18, -0.3, 0, Math.PI * 2);
-                    ctx.ellipse(w * 0.22, h * 0.22, w * 0.08, h * 0.08, 0, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                // Seed points (pixel coords in mocban.png) of the enclosed areas this colour fills
+                regions: [[288, 26], [338, 594], [370, 313], [90, 294], [362, 262]]
             },
             {
                 id: 'red',
@@ -353,13 +351,7 @@
                 source: 'Màu đỏ tự nhiên từ đá sỏi đỏ núi rừng hoặc khoáng son củ',
                 colorCode: '#c0392b',
                 icon: '🪨',
-                draw: (ctx, w, h) => {
-                    ctx.fillStyle = '#c0392b';
-                    ctx.beginPath();
-                    ctx.ellipse(w * 0.18, h * 0.42, w * 0.07, h * 0.07, 0, 0, Math.PI * 2);
-                    ctx.ellipse(w * 0.58, h * 0.38, w * 0.16, h * 0.08, 0.2, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                regions: [[94, 429], [120, 370], [226, 346], [312, 683], [95, 270], [454, 572], [443, 573], [89, 355]]
             },
             {
                 id: 'green',
@@ -367,13 +359,7 @@
                 source: 'Màu xanh mát dịu từ lá chàm ngâm trộn hạt dành dành',
                 colorCode: '#1b4d3e',
                 icon: '🌿',
-                draw: (ctx, w, h) => {
-                    ctx.fillStyle = '#1b4d3e';
-                    ctx.beginPath();
-                    ctx.ellipse(w * 0.2, h * 0.28, w * 0.12, h * 0.1, -0.4, 0, Math.PI * 2);
-                    ctx.ellipse(w * 0.8, h * 0.58, w * 0.1, h * 0.15, 0.4, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                regions: [[425, 188], [198, 217], [203, 508], [67, 216], [406, 473], [408, 469], [425, 498], [111, 367]]
             },
             {
                 id: 'pink',
@@ -381,13 +367,7 @@
                 source: 'Màu hồng phấn nhẹ nhàng pha từ bột điệp nướng với chút son đỏ',
                 colorCode: '#f3b2a6',
                 icon: '🐚',
-                draw: (ctx, w, h) => {
-                    ctx.fillStyle = '#f3b2a6';
-                    ctx.beginPath();
-                    ctx.ellipse(w * 0.58, h * 0.22, w * 0.19, h * 0.15, 0, 0, Math.PI * 2);
-                    ctx.ellipse(w * 0.48, h * 0.62, w * 0.14, h * 0.08, -0.1, 0, Math.PI * 2);
-                    ctx.fill();
-                }
+                regions: [[359, 44], [289, 33], [238, 459], [292, 456], [123, 126], [107, 182], [129, 211]]
             },
             {
                 id: 'black',
@@ -395,13 +375,7 @@
                 source: 'Thắng từ than lá tre cô đặc, dập nét mộc bản cuối cùng để định hình thần thái',
                 colorCode: '#1a1917',
                 icon: '🎋',
-                draw: (ctx, w, h, artImg) => {
-                    if (!artImg || !artImg.complete) return;
-                    ctx.save();
-                    ctx.globalCompositeOperation = 'multiply';
-                    ctx.drawImage(artImg, 0, 0, w, h);
-                    ctx.restore();
-                }
+                isLineArt: true
             }
         ];
 
@@ -411,8 +385,13 @@
             printedLayers: [false, false, false, false, false],
             layerToggles: [true, true, true, true, true],
             isInkLoaded: false,
-            carveProgress: 0
+            isComplete: false
         };
+
+        // Pixels darker than this in mocban.png count as the black outline
+        const LINE_THRESHOLD = 170;
+        let layerCanvases = null;
+        let paperTexture = null;
 
         const mainCanvas = document.getElementById('mainCanvas');
         const mainCtx = mainCanvas.getContext('2d');
@@ -429,10 +408,124 @@
         const exportArtBtn = document.getElementById('exportArtBtn');
 
         const artworkImage = new Image();
-        artworkImage.src = 'mocban.png';
         artworkImage.onload = () => {
+            try {
+                layerCanvases = buildLayerCanvases();
+            } catch (err) {
+                // Only happens if mocban-data.js is missing and the page is opened from file://
+                layerCanvases = null;
+                canvasGuideText.textContent = '⚠ Thiếu file mocban-data.js nên không tô màu được.';
+            }
             redrawMainCanvas();
         };
+        artworkImage.onerror = () => {
+            canvasGuideText.textContent = '⚠ Không tải được ảnh mocban.png';
+        };
+        artworkImage.src = window.MOCBAN_DATA_URL || 'mocban.png';
+
+        function hexToRgb(hex) {
+            const n = parseInt(hex.slice(1), 16);
+            return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+        }
+
+        function floodFill(walls, mask, W, H, start) {
+            if (walls[start] || mask[start]) return;
+            const stack = [start];
+            mask[start] = 1;
+            while (stack.length) {
+                const p = stack.pop();
+                const x = p % W;
+                if (x > 0 && !walls[p - 1] && !mask[p - 1]) { mask[p - 1] = 1; stack.push(p - 1); }
+                if (x < W - 1 && !walls[p + 1] && !mask[p + 1]) { mask[p + 1] = 1; stack.push(p + 1); }
+                if (p >= W && !walls[p - W] && !mask[p - W]) { mask[p - W] = 1; stack.push(p - W); }
+                if (p < W * (H - 1) && !walls[p + W] && !mask[p + W]) { mask[p + W] = 1; stack.push(p + W); }
+            }
+        }
+
+        function growMask(mask, W, H, steps) {
+            let cur = mask;
+            for (let s = 0; s < steps; s++) {
+                const next = new Uint8Array(cur);
+                for (let y = 1; y < H - 1; y++) {
+                    for (let x = 1; x < W - 1; x++) {
+                        const i = y * W + x;
+                        if (cur[i]) { next[i - 1] = next[i + 1] = next[i - W] = next[i + W] = 1; }
+                    }
+                }
+                cur = next;
+            }
+            return cur;
+        }
+
+        // Each colour layer fills the enclosed areas of the line art that contain its seed points
+        function buildLayerCanvases() {
+            const W = artworkImage.naturalWidth, H = artworkImage.naturalHeight;
+            const src = document.createElement('canvas');
+            src.width = W; src.height = H;
+            const sctx = src.getContext('2d');
+            sctx.drawImage(artworkImage, 0, 0);
+            const px = sctx.getImageData(0, 0, W, H).data;
+
+            // Outline thickened by 1px so small gaps in the lines don't let colour leak out
+            const line = new Uint8Array(W * H);
+            for (let i = 0; i < W * H; i++) {
+                const lum = (px[i * 4] + px[i * 4 + 1] + px[i * 4 + 2]) / 3;
+                line[i] = (px[i * 4 + 3] > 0 && lum < LINE_THRESHOLD) ? 1 : 0;
+            }
+            const walls = growMask(line, W, H, 1);
+
+            return DONG_HO_PIGMENTS.map(pigment => {
+                if (!pigment.regions) return null;
+                const mask = new Uint8Array(W * H);
+                pigment.regions.forEach(([x, y]) => floodFill(walls, mask, W, H, y * W + x));
+                // Grow back under the outline so no paper gap shows between colour and line
+                const filled = growMask(mask, W, H, 2);
+
+                const layer = document.createElement('canvas');
+                layer.width = W; layer.height = H;
+                const lctx = layer.getContext('2d');
+                const img = lctx.createImageData(W, H);
+                const [r, g, b] = hexToRgb(pigment.colorCode);
+                for (let i = 0; i < W * H; i++) {
+                    if (!filled[i]) continue;
+                    // Slight unevenness, like ink pressed from a woodblock
+                    const grain = 0.88 + Math.random() * 0.12;
+                    img.data[i * 4] = r;
+                    img.data[i * 4 + 1] = g;
+                    img.data[i * 4 + 2] = b;
+                    img.data[i * 4 + 3] = Math.round(255 * grain);
+                }
+                lctx.putImageData(img, 0, 0);
+                return layer;
+            });
+        }
+
+        // Giấy Điệp texture drawn into the canvas itself so it is included in the exported PNG
+        function buildPaperTexture(w, h) {
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#f5eedc';
+            ctx.fillRect(0, 0, w, h);
+            for (let y = 0; y < h; y += 9) {
+                for (let x = 0; x < w; x += 9) {
+                    ctx.fillStyle = 'rgba(215, 190, 150, 0.55)';
+                    ctx.beginPath(); ctx.arc(x + 4, y + 4, 1.2, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            for (let y = 0; y < h; y += 16) {
+                for (let x = 0; x < w; x += 16) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+                    ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            const vignette = ctx.createRadialGradient(w / 2, h * 0.4, Math.min(w, h) * 0.3, w / 2, h / 2, Math.max(w, h) * 0.75);
+            vignette.addColorStop(0, 'rgba(255, 255, 255, 0)');
+            vignette.addColorStop(1, 'rgba(120, 75, 30, 0.25)');
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, w, h);
+            return c;
+        }
 
         window.addEventListener('DOMContentLoaded', () => {
             setupNavigationTabs();
@@ -526,21 +619,21 @@
         }
 
         function setupInteractiveCanvas() {
-            paperCanvasBase.addEventListener('mousemove', (e) => {
+            // Pointer events cover mouse, pen and touch
+            const moveWoodblock = (e) => {
                 if (!state.isInkLoaded) return;
                 const rect = paperCanvasBase.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 floatingWoodblock.style.left = `${x - 70}px`;
                 floatingWoodblock.style.top = `${y - 90}px`;
-            });
+                floatingWoodblock.classList.remove('hidden');
+            };
+            paperCanvasBase.addEventListener('pointermove', moveWoodblock);
+            paperCanvasBase.addEventListener('pointerdown', moveWoodblock);
 
-            paperCanvasBase.addEventListener('mouseleave', () => {
-                if (state.isInkLoaded) floatingWoodblock.classList.add('hidden');
-            });
-
-            paperCanvasBase.addEventListener('mouseenter', () => {
-                if (state.isInkLoaded) floatingWoodblock.classList.remove('hidden');
+            paperCanvasBase.addEventListener('pointerleave', (e) => {
+                if (state.isInkLoaded && e.pointerType === 'mouse') floatingWoodblock.classList.add('hidden');
             });
 
             paperCanvasBase.addEventListener('click', (e) => {
@@ -578,9 +671,21 @@
             });
 
             exportArtBtn.addEventListener('click', () => {
+                // Export every printed layer, even ones currently hidden by the toggles
+                const out = document.createElement('canvas');
+                out.width = mainCanvas.width;
+                out.height = mainCanvas.height;
+                renderArtwork(out.getContext('2d'), out.width, out.height, false);
+                let dataUrl;
+                try {
+                    dataUrl = out.toDataURL('image/png');
+                } catch (err) {
+                    showToast('Không xuất được tranh khi mở file trực tiếp. Hãy mở trang qua web.');
+                    return;
+                }
                 const link = document.createElement('a');
-                link.download = 'tranh-dong-ho-thien-ninh.png';
-                link.href = mainCanvas.toDataURL('image/png');
+                link.download = 'tranh-dong-ho.png';
+                link.href = dataUrl;
                 link.click();
                 showToast('Đã xuất file tranh thành công!');
             });
@@ -606,22 +711,40 @@
         function updateProgressCount() {
             const count = state.printedLayers.filter(Boolean).length;
             stampProgressText.textContent = `Tiến độ: ${count}/5 màu`;
-            if (count === 5) {
+            const justCompleted = count === 5 && !state.isComplete;
+            state.isComplete = count === 5;
+            if (state.isComplete) {
                 exportArtBtn.removeAttribute('disabled');
                 canvasGuideText.textContent = '✨ Hoàn tất tác phẩm! Bạn có thể Xuất Tranh.';
-                audio.playWinSound();
+                if (justCompleted) audio.playWinSound();
             } else {
                 exportArtBtn.setAttribute('disabled', 'true');
             }
         }
 
-        function redrawMainCanvas() {
-            mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        function renderArtwork(ctx, w, h, respectToggles) {
+            if (!paperTexture) paperTexture = buildPaperTexture(w, h);
+            ctx.clearRect(0, 0, w, h);
+            ctx.drawImage(paperTexture, 0, 0, w, h);
             DONG_HO_PIGMENTS.forEach((pigment, idx) => {
-                if (state.printedLayers[idx] && state.layerToggles[idx]) {
-                    pigment.draw(mainCtx, mainCanvas.width, mainCanvas.height, artworkImage);
+                if (!state.printedLayers[idx]) return;
+                if (respectToggles && !state.layerToggles[idx]) return;
+                let source = null;
+                if (pigment.isLineArt) {
+                    if (artworkImage.complete && artworkImage.naturalWidth) source = artworkImage;
+                } else if (layerCanvases) {
+                    source = layerCanvases[idx];
                 }
+                if (!source) return;
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.drawImage(source, 0, 0, w, h);
+                ctx.restore();
             });
+        }
+
+        function redrawMainCanvas() {
+            renderArtwork(mainCtx, mainCanvas.width, mainCanvas.height, true);
         }
 
         function setupToggles() {
@@ -639,8 +762,16 @@
             const carveProgressBar = document.getElementById('carveProgressBar');
             const carvePercent = document.getElementById('carvePercent');
 
-            let carvedPixels = 0;
-            const totalPixels = carveCanvas.width * carveCanvas.height;
+            // Progress = share of the board actually carved, tracked on a grid of small cells
+            const CHISEL = 36;
+            const CELL = 6;
+            const cols = Math.ceil(carveCanvas.width / CELL);
+            const rows = Math.ceil(carveCanvas.height / CELL);
+            let carvedCells = new Uint8Array(cols * rows);
+            let carvedCount = 0;
+            let carveDone = false;
+            let lastPoint = null;
+            let lastChiselSound = 0;
 
             function initWoodTexture() {
                 carveCtx.fillStyle = '#5c3a21';
@@ -656,27 +787,84 @@
             }
 
             initWoodTexture();
+            // Redraw once the Charm font has loaded, unless carving has already started
+            document.fonts.load('bold 24px Charm').then(() => {
+                if (carvedCount === 0) initWoodTexture();
+            }).catch(() => {});
 
-            let isCarving = false;
-            carveCanvas.addEventListener('mousedown', () => isCarving = true);
-            window.addEventListener('mouseup', () => isCarving = false);
-            carveCanvas.addEventListener('mousemove', (e) => {
-                if (!isCarving && e.buttons !== 1) return;
-                const rect = carveCanvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) * (carveCanvas.width / rect.width);
-                const y = (e.clientY - rect.top) * (carveCanvas.height / rect.height);
-
-                carveCtx.clearRect(x - 18, y - 18, 36, 36);
-                audio.playChiselSound();
-
-                carvedPixels += 1200;
-                let pct = Math.min(100, Math.floor((carvedPixels / totalPixels) * 100));
+            function updateCarveProgress() {
+                const pct = Math.floor((carvedCount / (cols * rows)) * 100);
                 carvePercent.textContent = `${pct}%`;
                 carveProgressBar.style.width = `${pct}%`;
+                if (pct === 100 && !carveDone) {
+                    carveDone = true;
+                    audio.playWinSound();
+                    showToast('Đã khắc xong toàn bộ ván gỗ!');
+                }
+            }
+
+            function carveAt(x, y) {
+                const half = CHISEL / 2;
+                carveCtx.clearRect(x - half, y - half, CHISEL, CHISEL);
+                // Mark every cell whose centre lies inside the cleared square
+                const c0 = Math.max(0, Math.ceil((x - half - CELL / 2) / CELL));
+                const c1 = Math.min(cols - 1, Math.floor((x + half - CELL / 2) / CELL));
+                const r0 = Math.max(0, Math.ceil((y - half - CELL / 2) / CELL));
+                const r1 = Math.min(rows - 1, Math.floor((y + half - CELL / 2) / CELL));
+                for (let r = r0; r <= r1; r++) {
+                    for (let c = c0; c <= c1; c++) {
+                        const i = r * cols + c;
+                        if (!carvedCells[i]) { carvedCells[i] = 1; carvedCount++; }
+                    }
+                }
+            }
+
+            function toCanvasPoint(e) {
+                const rect = carveCanvas.getBoundingClientRect();
+                return {
+                    x: (e.clientX - rect.left) * (carveCanvas.width / rect.width),
+                    y: (e.clientY - rect.top) * (carveCanvas.height / rect.height)
+                };
+            }
+
+            function carveStroke(p) {
+                // Fill in between pointer events so fast strokes stay continuous
+                const from = lastPoint || p;
+                const dist = Math.hypot(p.x - from.x, p.y - from.y);
+                const steps = Math.max(1, Math.ceil(dist / (CHISEL / 3)));
+                for (let s = 1; s <= steps; s++) {
+                    carveAt(from.x + (p.x - from.x) * s / steps, from.y + (p.y - from.y) * s / steps);
+                }
+                lastPoint = p;
+
+                const now = performance.now();
+                if (now - lastChiselSound > 70) {
+                    audio.playChiselSound();
+                    lastChiselSound = now;
+                }
+                updateCarveProgress();
+            }
+
+            let isCarving = false;
+            carveCanvas.addEventListener('pointerdown', (e) => {
+                isCarving = true;
+                lastPoint = null;
+                try { carveCanvas.setPointerCapture(e.pointerId); } catch (err) {}
+                carveStroke(toCanvasPoint(e));
             });
+            carveCanvas.addEventListener('pointermove', (e) => {
+                if (!isCarving) return;
+                carveStroke(toCanvasPoint(e));
+            });
+            const endStroke = () => { isCarving = false; lastPoint = null; };
+            window.addEventListener('pointerup', endStroke);
+            window.addEventListener('pointercancel', endStroke);
 
             document.getElementById('resetCarveBtn').addEventListener('click', () => {
-                carvedPixels = 0;
+                carvedCells = new Uint8Array(cols * rows);
+                carvedCount = 0;
+                carveDone = false;
+                lastPoint = null;
                 initWoodTexture();
                 carvePercent.textContent = '0%';
                 carveProgressBar.style.width = '0%';
@@ -684,11 +872,14 @@
             });
         }
 
+        let toastTimer = null;
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').textContent = msg;
             toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
-            setTimeout(() => {
+            // Restart the timer so an earlier toast can't hide this one early
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
             }, 3000);
         }
