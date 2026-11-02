@@ -360,9 +360,11 @@
             {
                 id: 'pink',
                 name: 'Hồng Da Thịt',
-                source: 'Màu hồng phấn nhẹ nhàng pha từ bột điệp nướng với chút son đỏ',
+                source: 'Màu hồng phấn nhẹ nhàng pha từ bột điệp nướng với chút son đỏ; bột điệp nguyên chất cho màu trắng của tròng mắt',
                 colorCode: '#f5dcd3',
-                icon: '🐚'
+                icon: '🐚',
+                // Also prints the pure điệp white (colour map class 6), e.g. the whites of the eyes
+                whiteCode: '#fffdf8'
             },
             {
                 id: 'black',
@@ -431,8 +433,30 @@
             return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
         }
 
+        // Colour map class used for the white of điệp powder (classes 1-5 are pigment index + 1)
+        const WHITE_CLASS = 6;
+
+        // Paints every pixel of the given colour map class, with slight unevenness like ink pressed from a woodblock
+        function buildInkCanvas(px, W, H, mapClass, colorCode) {
+            const layer = document.createElement('canvas');
+            layer.width = W; layer.height = H;
+            const lctx = layer.getContext('2d');
+            const img = lctx.createImageData(W, H);
+            const [r, g, b] = hexToRgb(colorCode);
+            for (let i = 0; i < W * H; i++) {
+                if (px[i * 4 + 3] < 128 || Math.round(px[i * 4] / 40) !== mapClass) continue;
+                const grain = 0.88 + Math.random() * 0.12;
+                img.data[i * 4] = r;
+                img.data[i * 4 + 1] = g;
+                img.data[i * 4 + 2] = b;
+                img.data[i * 4 + 3] = Math.round(255 * grain);
+            }
+            lctx.putImageData(img, 0, 0);
+            return layer;
+        }
+
         // mausac.png is a colour map traced from the reference painting tranh-dong-ho-09.jpg:
-        // each pixel's red channel is (pigment index + 1) * 40, transparent where the paper shows
+        // each pixel's red channel is its class * 40, transparent where the paper shows
         function buildLayerCanvases() {
             const W = colorMapImage.naturalWidth, H = colorMapImage.naturalHeight;
             const src = document.createElement('canvas');
@@ -441,24 +465,10 @@
             sctx.drawImage(colorMapImage, 0, 0);
             const px = sctx.getImageData(0, 0, W, H).data;
 
-            return DONG_HO_PIGMENTS.map((pigment, idx) => {
-                const layer = document.createElement('canvas');
-                layer.width = W; layer.height = H;
-                const lctx = layer.getContext('2d');
-                const img = lctx.createImageData(W, H);
-                const [r, g, b] = hexToRgb(pigment.colorCode);
-                for (let i = 0; i < W * H; i++) {
-                    if (px[i * 4 + 3] < 128 || Math.round(px[i * 4] / 40) !== idx + 1) continue;
-                    // Slight unevenness, like ink pressed from a woodblock
-                    const grain = 0.88 + Math.random() * 0.12;
-                    img.data[i * 4] = r;
-                    img.data[i * 4 + 1] = g;
-                    img.data[i * 4 + 2] = b;
-                    img.data[i * 4 + 3] = Math.round(255 * grain);
-                }
-                lctx.putImageData(img, 0, 0);
-                return layer;
-            });
+            return DONG_HO_PIGMENTS.map((pigment, idx) => ({
+                ink: buildInkCanvas(px, W, H, idx + 1, pigment.colorCode),
+                white: pigment.whiteCode ? buildInkCanvas(px, W, H, WHITE_CLASS, pigment.whiteCode) : null
+            }));
         }
 
         // Giấy Điệp texture drawn into the canvas itself so it is included in the exported PNG
@@ -691,12 +701,16 @@
                 if (!state.printedLayers[idx]) return;
                 if (respectToggles && !state.layerToggles[idx]) return;
                 const sources = [];
-                if (layerCanvases) sources.push(layerCanvases[idx]);
+                if (layerCanvases) sources.push(layerCanvases[idx].ink);
                 if (pigment.isLineArt && artworkImage.complete && artworkImage.naturalWidth) sources.push(artworkImage);
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
                 sources.forEach(source => ctx.drawImage(source, 0, 0, w, h));
                 ctx.restore();
+                // White can't be multiplied onto the cream paper, so it is laid on top normally
+                if (layerCanvases && layerCanvases[idx].white) {
+                    ctx.drawImage(layerCanvases[idx].white, 0, 0, w, h);
+                }
             });
         }
 
