@@ -266,7 +266,7 @@
 
     <!-- Line art as a data URL, so colouring works even when opened from disk -->
     <!-- Bump ?v= whenever mocban-data.js changes so browsers don't keep an old cached copy -->
-    <script src="mocban-data.js?v=4"></script>
+    <script src="mocban-data.js?v=5"></script>
 
     <!-- MAIN JAVASCRIPT SIMULATION LOGIC -->
     <script>
@@ -348,7 +348,7 @@
                 id: 'red',
                 name: 'Đỏ Son Sỏi',
                 source: 'Màu đỏ tự nhiên từ đá sỏi đỏ núi rừng hoặc khoáng son củ',
-                colorCode: '#8e2a22',
+                colorCode: '#b3302a',
                 icon: '🪨'
             },
             {
@@ -468,8 +468,31 @@
 
             return DONG_HO_PIGMENTS.map((pigment, idx) => ({
                 ink: buildInkCanvas(px, W, H, idx + 1, pigment.colorCode),
-                white: pigment.whiteCode ? buildInkCanvas(px, W, H, WHITE_CLASS, pigment.whiteCode) : null
+                white: pigment.whiteCode ? buildInkCanvas(px, W, H, WHITE_CLASS, pigment.whiteCode) : null,
+                lines: pigment.isLineArt ? buildLineCanvas(pigment.colorCode) : null
             }));
+        }
+
+        // The outline as solid ink: grey anti-aliased edges of mocban.png are pushed to full black,
+        // so the lines stay strong and sharp over the colours instead of washing out
+        function buildLineCanvas(colorCode) {
+            const W = artworkImage.naturalWidth, H = artworkImage.naturalHeight;
+            const c = document.createElement('canvas');
+            c.width = W; c.height = H;
+            const ctx = c.getContext('2d');
+            ctx.drawImage(artworkImage, 0, 0);
+            const img = ctx.getImageData(0, 0, W, H);
+            const [r, g, b] = hexToRgb(colorCode);
+            for (let i = 0; i < W * H; i++) {
+                const lum = (img.data[i * 4] + img.data[i * 4 + 1] + img.data[i * 4 + 2]) / 3;
+                const ink = Math.min(1, Math.max(0, (235 - lum) / 115)) * (img.data[i * 4 + 3] / 255);
+                img.data[i * 4] = r;
+                img.data[i * 4 + 1] = g;
+                img.data[i * 4 + 2] = b;
+                img.data[i * 4 + 3] = Math.round(255 * ink);
+            }
+            ctx.putImageData(img, 0, 0);
+            return c;
         }
 
         // Giấy Điệp texture drawn into the canvas itself so it is included in the exported PNG
@@ -701,17 +724,18 @@
             DONG_HO_PIGMENTS.forEach((pigment, idx) => {
                 if (!state.printedLayers[idx]) return;
                 if (respectToggles && !state.layerToggles[idx]) return;
-                const sources = [];
-                if (layerCanvases) sources.push(layerCanvases[idx].ink);
-                if (pigment.isLineArt && artworkImage.complete && artworkImage.naturalWidth) sources.push(artworkImage);
+                const layer = layerCanvases && layerCanvases[idx];
                 ctx.save();
                 ctx.globalCompositeOperation = 'multiply';
-                sources.forEach(source => ctx.drawImage(source, 0, 0, w, h));
+                if (layer) ctx.drawImage(layer.ink, 0, 0, w, h);
+                // Without layer canvases (image pixels unreadable) fall back to the raw line art
+                if (pigment.isLineArt && !layer && artworkImage.complete && artworkImage.naturalWidth) {
+                    ctx.drawImage(artworkImage, 0, 0, w, h);
+                }
                 ctx.restore();
                 // White can't be multiplied onto the cream paper, so it is laid on top normally
-                if (layerCanvases && layerCanvases[idx].white) {
-                    ctx.drawImage(layerCanvases[idx].white, 0, 0, w, h);
-                }
+                if (layer && layer.white) ctx.drawImage(layer.white, 0, 0, w, h);
+                if (layer && layer.lines) ctx.drawImage(layer.lines, 0, 0, w, h);
             });
         }
 
