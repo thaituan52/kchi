@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xưởng Chế Tác Tranh Dân Gian Đông Hồ - Interactive Artisan Workshop</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Charm:wght@400;700&family=Philosopher:ital,wght@0,400;0,700;1,400&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        diep: '#f6f0e2',
+                        wood: '#5c3a21',
+                        wooddark: '#2c180b',
+                        woodlight: '#8d5b36',
+                        vermilion: '#c0392b',
+                        indigo: '#1b4d3e',
+                        hoeyellow: '#e5aa1c'
+                    },
+                    fontFamily: {
+                        charm: ['Charm', 'cursive', 'serif'],
+                        philosopher: ['Philosopher', 'serif'],
+                        sans: ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .paper-diep {
+            background-color: #f5eedc;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.9) 1.8px, transparent 1.8px),
+                radial-gradient(rgba(215, 190, 150, 0.65) 1.2px, transparent 1.2px);
+            background-size: 16px 16px, 9px 9px;
+            background-position: 0 0, 4px 4px;
+            box-shadow: inset 0 0 45px rgba(120, 75, 30, 0.22);
+            position: relative;
+        }
+
+        .paper-diep::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.5) 0%, rgba(240,225,200,0) 80%);
+            pointer-events: none;
+        }
+
+        .bg-wood-pattern {
+            background-color: #3b2211;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 10px);
+        }
+
+        .woodblock-3d {
+            transform-style: preserve-3d;
+            perspective: 800px;
+            transition: transform 0.08s cubic-bezier(0.1, 0.8, 0.3, 1);
+        }
+
+        @keyframes stampPressDown {
+            0% { transform: scale(1.06) translateY(-12px) rotateX(10deg); }
+            40% { transform: scale(0.96) translateY(2px) rotateX(0deg); }
+            100% { transform: scale(1) translateY(0) rotateX(0deg); }
+        }
+
+        .stamp-press-fx {
+            animation: stampPressDown 0.32s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translate(0, 0); }
+            25% { transform: translate(-3px, 3px); }
+            50% { transform: translate(3px, -2px); }
+            75% { transform: translate(-2px, -1px); }
+        }
+
+        .shake-active {
+            animation: screenShake 0.18s ease-in-out;
+        }
+
+        .chisel-cursor {
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='%23e5aa1c'><path d='M19 3l1 1-11 11-4 1 1-4 11-11zm-13 13l-2 4 4-2 11-11-2-2-11 11z'/></svg>") 2 22, pointer;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #1c0e07; }
+        ::-webkit-scrollbar-thumb { background: #8d5b36; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-[#170c06] text-amber-100 font-sans min-h-screen flex flex-col justify-between select-none overflow-x-hidden">
+
+    <!-- Header Navigation -->
+    <header class="bg-wood-pattern border-b-2 border-amber-800/60 shadow-2xl py-3 px-4 sm:px-8 flex flex-wrap justify-between items-center z-30 sticky top-0">
+        <div class="flex items-center space-x-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-600 to-amber-900 border border-amber-400/50 flex items-center justify-center text-amber-100 text-2xl font-bold font-charm shadow-lg">
+                東
+            </div>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold font-charm text-amber-200 tracking-wide flex items-center gap-2">
+                    Xưởng Chế Tác Tranh Dân Gian Đông Hồ
+                </h1>
+                <p class="text-xs text-amber-400/80 hidden sm:block">Trải nghiệm tương tác 3D: Dập màu tự nhiên & Khắc mộc bản truyền thống</p>
+            </div>
+        </div>
+
+        <!-- Mode Selector Tabs (Đã bỏ Tab Triển Lãm) -->
+        <div class="flex items-center bg-black/40 p-1 rounded-xl border border-amber-800/60 mt-2 sm:mt-0 text-xs sm:text-sm">
+            <button id="tabMode1" class="mode-tab px-3.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-amber-700 text-amber-100 shadow">
+                <i class="fas fa-hand-holding"></i>
+                <span>Xưởng Dập Màu 3D</span>
+            </button>
+            <button id="tabMode2" class="mode-tab px-3.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 text-amber-300 hover:text-white">
+                <i class="fas fa-hammer"></i>
+                <span>Khắc Mộc Bản</span>
+            </button>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-2">
+            <button id="audioToggleBtn" class="p-2 px-3 rounded-lg bg-amber-950/80 border border-amber-800 hover:bg-amber-900 text-amber-300 text-xs flex items-center gap-1.5 transition">
+                <i class="fas fa-volume-up text-amber-400" id="audioIcon"></i>
+                <span id="audioText">Âm thanh</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 md:p-6 flex flex-col items-center">
+
+        <!-- ================= MODE 1: XƯỞNG DẬP MÀU 3D ================= -->
+        <div id="mode1Container" class="w-full grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            <!-- Left Control Panel -->
+            <section class="lg:col-span-5 bg-wood-pattern/90 border border-amber-900/80 rounded-2xl p-4 shadow-2xl space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-xs font-bold text-amber-300 flex items-center gap-1.5 font-charm text-sm">
+                            <i class="fas fa-boxes-packing text-amber-400"></i> Thố Mực & Mộc Bản In Màu
+                        </h3>
+                        <span id="stampProgressText" class="text-xs bg-amber-950 px-2.5 py-0.5 rounded-full border border-amber-800 text-amber-300">Tiến độ: 0/5 màu</span>
+                    </div>
+                    <div id="inkTubsList" class="space-y-2"></div>
+                </div>
+
+                <div id="pigmentLoreBox" class="bg-amber-950/80 border border-amber-800/60 rounded-xl p-3.5 text-xs text-amber-200/90 space-y-1">
+                    <div class="font-bold text-amber-300 flex items-center gap-1.5">
+                        <i class="fas fa-seedling text-emerald-400"></i>
+                        <span id="pigmentLoreTitle">Nguồn Gốc Mực Tự Nhiên</span>
+                    </div>
+                    <p id="pigmentLoreDesc" class="text-[11px] text-amber-200/80 leading-relaxed">
+                        Hãy chọn "Nhúng Mực" ở một mộc bản phía trên để chuốt màu tự nhiên lên ván gỗ trước khi dập.
+                    </p>
+                </div>
+
+                <div class="pt-2 border-t border-amber-900/60 flex items-center justify-between gap-3">
+                    <button id="exportArtBtn" disabled class="flex-1 py-3 px-4 bg-gradient-to-r from-amber-600 to-yellow-600 hover:from-amber-500 hover:to-yellow-500 text-stone-950 font-bold text-xs sm:text-sm rounded-xl shadow-xl flex items-center justify-center gap-2 transition disabled:opacity-35 disabled:cursor-not-allowed">
+                        <i class="fas fa-download"></i>
+                        <span>Xuất Tranh & Triện Gỗ (PNG)</span>
+                    </button>
+                    <button id="clearPaperBtn" title="Làm sạch giấy" class="p-3 bg-red-950/80 border border-red-800 hover:bg-red-900 text-red-200 rounded-xl text-xs transition">
+                        <i class="fas fa-rotate-left"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Right Canvas Workspace -->
+            <section class="lg:col-span-7 flex flex-col items-center justify-center relative">
+                <div class="w-full max-w-[500px] flex justify-between items-center text-xs text-amber-300/80 mb-2 px-1">
+                    <span id="canvasGuideText" class="animate-pulse text-amber-400 font-medium">
+                        ← Nhấn "Nhúng Mực" ở thố màu để bắt đầu
+                    </span>
+                    <span class="text-[11px] text-amber-400/60 italic">Giấy Điệp Ánh Xà Cừ</span>
+                </div>
+
+                <div id="paperFrameContainer" class="relative p-3 sm:p-4 bg-[#2a170b] border-4 border-[#1c0e07] rounded-2xl shadow-2xl max-w-full">
+                    <div class="absolute top-1 left-1 w-4 h-4 border-t-2 border-l-2 border-amber-500/70"></div>
+                    <div class="absolute top-1 right-1 w-4 h-4 border-t-2 border-r-2 border-amber-500/70"></div>
+                    <div class="absolute bottom-1 left-1 w-4 h-4 border-b-2 border-l-2 border-amber-500/70"></div>
+                    <div class="absolute bottom-1 right-1 w-4 h-4 border-b-2 border-r-2 border-amber-500/70"></div>
+
+                    <div id="paperCanvasBase" class="paper-diep rounded-xl overflow-hidden border border-amber-900/40 relative cursor-crosshair flex items-center justify-center shadow-inner">
+                        <canvas id="mainCanvas" width="480" height="640" class="w-full max-w-[460px] h-auto block relative z-10"></canvas>
+
+                        <!-- Floating 3D Stamp Overlay -->
+                        <div id="floatingWoodblock" class="woodblock-3d absolute pointer-events-none hidden z-30 transition-opacity duration-200 opacity-90" style="width: 140px; height: 180px;">
+                            <div class="w-full h-full bg-woodlight/90 border-4 border-amber-900 rounded-lg shadow-2xl flex flex-col items-center justify-center text-center p-2 relative overflow-hidden backdrop-blur-sm">
+                                <div id="floatingBlockIcon" class="text-3xl mb-1">🪵</div>
+                                <div id="floatingBlockName" class="text-xs font-bold font-charm text-amber-950">Mộc Bản</div>
+                                <div class="text-[9px] text-amber-900/80 font-bold uppercase mt-1 animate-pulse">Sẵn Sàng Dập!</div>
+                                <div id="floatingBlockInkFace" class="absolute inset-0 opacity-40 mix-blend-color-burn pointer-events-none"></div>
+                            </div>
+                        </div>
+
+                        <div id="fxContainer" class="absolute inset-0 pointer-events-none z-40 overflow-hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Layer Visibility Toggles -->
+                <div class="mt-4 bg-wood-pattern/80 border border-amber-900/70 rounded-xl p-3 w-full max-w-[500px] flex flex-wrap justify-center items-center gap-3 text-xs">
+                    <span class="text-amber-400 font-bold mr-1">Ẩn/Hiện Màu:</span>
+                    <label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" id="layerCheck0" checked class="rounded border-amber-700 text-amber-600"> <span>1.Vàng</span></label>
+                    <label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" id="layerCheck1" checked class="rounded border-amber-700 text-amber-600"> <span>2.Đỏ</span></label>
+                    <label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" id="layerCheck2" checked class="rounded border-amber-700 text-amber-600"> <span>3.Xanh</span></label>
+                    <label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" id="layerCheck3" checked class="rounded border-amber-700 text-amber-600"> <span>4.Hồng</span></label>
+                    <label class="inline-flex items-center gap-1 cursor-pointer"><input type="checkbox" id="layerCheck4" checked class="rounded border-amber-700 text-amber-600"> <span>5.Nét Đen</span></label>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= MODE 2: KHẮC MỘC BẢN ================= -->
+        <div id="mode2Container" class="w-full hidden grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <section class="lg:col-span-5 bg-wood-pattern/90 border border-amber-900/80 rounded-2xl p-5 shadow-2xl space-y-4">
+                <h2 class="text-lg font-bold font-charm text-amber-300 border-b border-amber-800 pb-2">
+                    <i class="fas fa-hammer text-amber-400 mr-2"></i>Chạm Khắc Ván Gỗ Thị Rừng
+                </h2>
+                <p class="text-xs text-amber-200/80 leading-relaxed">
+                    Nghệ nhân Đông Hồ sử dụng ván gỗ thị vừa dẻo dai vừa không nứt nẻ. Hãy dùng con đục gỗ rê chuột trên mặt ván để bóc tách các thớ gỗ thừa, làm nổi bật đường nét thần thái của bức tranh.
+                </p>
+                <div class="space-y-3 bg-amber-950/60 p-3.5 rounded-xl border border-amber-900/60 text-xs">
+                    <div class="flex justify-between items-center text-amber-300 font-bold">
+                        <span>Tiến Độ Khắc Mộc Bản:</span>
+                        <span id="carvePercent">0%</span>
+                    </div>
+                    <div class="w-full bg-amber-950 rounded-full h-3 border border-amber-800 overflow-hidden">
+                        <div id="carveProgressBar" class="bg-gradient-to-r from-amber-600 to-yellow-500 h-full w-0 transition-all duration-200"></div>
+                    </div>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button id="resetCarveBtn" class="w-full py-2.5 px-4 bg-amber-900/80 hover:bg-amber-800 border border-amber-700 text-amber-100 font-bold text-xs rounded-xl transition">
+                        <i class="fas fa-rotate-left mr-1.5"></i>Khắc Ván Mới
+                    </button>
+                </div>
+            </section>
+            <section class="lg:col-span-7 flex flex-col items-center justify-center">
+                <div class="bg-[#2a170b] border-4 border-[#1c0e07] rounded-2xl p-4 shadow-2xl w-full max-w-[500px]">
+                    <div class="text-xs text-amber-300/80 mb-2 flex justify-between items-center">
+                        <span>Rê chuột/Chạm tay để đục ván gỗ</span>
+                        <span class="text-amber-400 font-bold"><i class="fas fa-chisel"></i> Công cụ: Đục Thẳng</span>
+                    </div>
+                    <div class="relative overflow-hidden rounded-xl border-2 border-amber-800/80 shadow-2xl chisel-cursor bg-amber-950">
+                        <canvas id="carveCanvas" width="480" height="600" class="w-full h-auto block"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-amber-900 border border-amber-500 text-amber-100 px-4 py-3 rounded-xl shadow-2xl transition-all duration-300 opacity-0 pointer-events-none translate-y-4 z-50 flex items-center gap-3">
+        <i class="fas fa-check-circle text-amber-400 text-xl"></i>
+        <span id="toastMsg" class="text-sm font-medium">Notification</span>
+    </div>
+
+    <footer class="bg-wood-pattern border-t border-amber-900/80 py-3 text-center text-xs text-amber-400/60">
+        Xưởng Chế Tác Tranh Dân Gian Đông Hồ &copy; Di Sản Văn Hóa Phi Vật Thể Việt Nam
+    </footer>
+
+    <!-- MAIN JAVASCRIPT SIMULATION LOGIC -->
+    <script>
+        class AudioEngine {
+            constructor() { this.ctx = null; this.enabled = true; }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            }
+            playDipSound() {
+                if (!this.enabled) return;
+                this.init(); if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(280, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(120, this.ctx.currentTime + 0.18);
+                gain.gain.setValueAtTime(0.35, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.18);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.18);
+            }
+            playStampSound() {
+                if (!this.enabled) return;
+                this.init(); if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(35, this.ctx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.25);
+            }
+            playChiselSound() {
+                if (!this.enabled) return;
+                this.init(); if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(450, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(150, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain); gain.connect(this.ctx.destination);
+                osc.start(); osc.stop(this.ctx.currentTime + 0.05);
+            }
+            playWinSound() {
+                if (!this.enabled) return;
+                this.init(); if (!this.ctx) return;
+                [261, 329, 392, 523].forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine'; osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0, this.ctx.currentTime + idx * 0.09);
+                    gain.gain.linearRampToValueAtTime(0.3, this.ctx.currentTime + idx * 0.09 + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.09 + 0.35);
+                    osc.connect(gain); gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.09);
+                    osc.stop(this.ctx.currentTime + idx * 0.09 + 0.35);
+                });
+            }
+        }
+
+        const audio = new AudioEngine();
+
+        const DONG_HO_PIGMENTS = [
+            {
+                id: 'yellow',
+                name: 'Vàng Hoa Hòe',
+                source: 'Sắc vàng ấm chiết xuất từ nụ hoa hòe phơi khô chưng cất',
+                colorCode: '#e5aa1c',
+                icon: '🌼',
+                draw: (ctx, w, h) => {
+                    ctx.fillStyle = '#e5aa1c';
+                    ctx.beginPath();
+                    ctx.ellipse(w * 0.38, h * 0.58, w * 0.18, h * 0.18, -0.3, 0, Math.PI * 2);
+                    ctx.ellipse(w * 0.22, h * 0.22, w * 0.08, h * 0.08, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            },
+            {
+                id: 'red',
+                name: 'Đỏ Son Sỏi',
+                source: 'Màu đỏ tự nhiên từ đá sỏi đỏ núi rừng hoặc khoáng son củ',
+                colorCode: '#c0392b',
+                icon: '🪨',
+                draw: (ctx, w, h) => {
+                    ctx.fillStyle = '#c0392b';
+                    ctx.beginPath();
+                    ctx.ellipse(w * 0.18, h * 0.42, w * 0.07, h * 0.07, 0, 0, Math.PI * 2);
+                    ctx.ellipse(w * 0.58, h * 0.38, w * 0.16, h * 0.08, 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            },
+            {
+                id: 'green',
+                name: 'Xanh Lá Chàm',
+                source: 'Màu xanh mát dịu từ lá chàm ngâm trộn hạt dành dành',
+                colorCode: '#1b4d3e',
+                icon: '🌿',
+                draw: (ctx, w, h) => {
+                    ctx.fillStyle = '#1b4d3e';
+                    ctx.beginPath();
+                    ctx.ellipse(w * 0.2, h * 0.28, w * 0.12, h * 0.1, -0.4, 0, Math.PI * 2);
+                    ctx.ellipse(w * 0.8, h * 0.58, w * 0.1, h * 0.15, 0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            },
+            {
+                id: 'pink',
+                name: 'Hồng Da Thịt',
+                source: 'Màu hồng phấn nhẹ nhàng pha từ bột điệp nướng với chút son đỏ',
+                colorCode: '#f3b2a6',
+                icon: '🐚',
+                draw: (ctx, w, h) => {
+                    ctx.fillStyle = '#f3b2a6';
+                    ctx.beginPath();
+                    ctx.ellipse(w * 0.58, h * 0.22, w * 0.19, h * 0.15, 0, 0, Math.PI * 2);
+                    ctx.ellipse(w * 0.48, h * 0.62, w * 0.14, h * 0.08, -0.1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            },
+            {
+                id: 'black',
+                name: 'Nét Đen Than Lá Tre',
+                source: 'Thắng từ than lá tre cô đặc, dập nét mộc bản cuối cùng để định hình thần thái',
+                colorCode: '#1a1917',
+                icon: '🎋',
+                draw: (ctx, w, h, artImg) => {
+                    if (!artImg || !artImg.complete) return;
+                    ctx.save();
+                    ctx.globalCompositeOperation = 'multiply';
+                    ctx.drawImage(artImg, 0, 0, w, h);
+                    ctx.restore();
+                }
+            }
+        ];
+
+        let state = {
+            currentMode: 1,
+            selectedLayerIdx: null,
+            printedLayers: [false, false, false, false, false],
+            layerToggles: [true, true, true, true, true],
+            isInkLoaded: false,
+            carveProgress: 0
+        };
+
+        const mainCanvas = document.getElementById('mainCanvas');
+        const mainCtx = mainCanvas.getContext('2d');
+        const paperCanvasBase = document.getElementById('paperCanvasBase');
+        const floatingWoodblock = document.getElementById('floatingWoodblock');
+        const floatingBlockName = document.getElementById('floatingBlockName');
+        const floatingBlockIcon = document.getElementById('floatingBlockIcon');
+        const floatingBlockInkFace = document.getElementById('floatingBlockInkFace');
+        const inkTubsList = document.getElementById('inkTubsList');
+        const pigmentLoreTitle = document.getElementById('pigmentLoreTitle');
+        const pigmentLoreDesc = document.getElementById('pigmentLoreDesc');
+        const stampProgressText = document.getElementById('stampProgressText');
+        const canvasGuideText = document.getElementById('canvasGuideText');
+        const exportArtBtn = document.getElementById('exportArtBtn');
+
+        const artworkImage = new Image();
+        artworkImage.src = 'mocban.png';
+        artworkImage.onload = () => {
+            redrawMainCanvas();
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            setupNavigationTabs();
+            renderInkTubsList();
+            setupInteractiveCanvas();
+            setupToggles();
+            setupCarvingMode();
+            redrawMainCanvas();
+        });
+
+        function setupNavigationTabs() {
+            const tabs = [
+                { btn: 'tabMode1', container: 'mode1Container', mode: 1 },
+                { btn: 'tabMode2', container: 'mode2Container', mode: 2 }
+            ];
+
+            tabs.forEach(item => {
+                document.getElementById(item.btn).addEventListener('click', () => {
+                    state.currentMode = item.mode;
+                    tabs.forEach(t => {
+                        const b = document.getElementById(t.btn);
+                        const c = document.getElementById(t.container);
+                        if (t.mode === item.mode) {
+                            b.className = "mode-tab px-3.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 bg-amber-700 text-amber-100 shadow";
+                            c.classList.remove('hidden');
+                            c.classList.add('grid');
+                        } else {
+                            b.className = "mode-tab px-3.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 text-amber-300 hover:text-white";
+                            c.classList.remove('grid');
+                            c.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            document.getElementById('audioToggleBtn').addEventListener('click', () => {
+                audio.enabled = !audio.enabled;
+                const icon = document.getElementById('audioIcon');
+                const text = document.getElementById('audioText');
+                if (audio.enabled) {
+                    icon.className = "fas fa-volume-up text-amber-400";
+                    text.textContent = "Âm thanh";
+                } else {
+                    icon.className = "fas fa-volume-mute text-stone-500";
+                    text.textContent = "Tắt tiếng";
+                }
+            });
+        }
+
+        function renderInkTubsList() {
+            inkTubsList.innerHTML = '';
+            DONG_HO_PIGMENTS.forEach((pigment, idx) => {
+                const isPrinted = state.printedLayers[idx];
+                const isSelected = state.selectedLayerIdx === idx;
+                const div = document.createElement('div');
+                div.className = `p-2.5 rounded-xl border flex items-center justify-between transition cursor-pointer ${
+                    isSelected ? 'bg-amber-900/90 border-amber-400 shadow-lg' : 'bg-amber-950/70 border-amber-900/60 hover:bg-amber-900/50'
+                }`;
+                div.innerHTML = `
+                    <div class="flex items-center space-x-2.5">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg shadow border border-amber-700/50" style="background-color: ${pigment.colorCode}22">
+                            ${pigment.icon}
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-amber-200">${pigment.name}</div>
+                            <div class="text-[10px] text-amber-400/70">${isPrinted ? '✓ Đã dập xong' : 'Chưa dập'}</div>
+                        </div>
+                    </div>
+                    <button class="px-2.5 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                        isPrinted ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-amber-700 hover:bg-amber-600 text-stone-950 shadow'
+                    }">
+                        <i class="fas ${isPrinted ? 'fa-check' : 'fa-brush'}"></i>
+                        <span>${isPrinted ? 'Dập Lại' : 'Nhúng Mực'}</span>
+                    </button>
+                `;
+                div.addEventListener('click', () => {
+                    state.selectedLayerIdx = idx;
+                    state.isInkLoaded = true;
+                    audio.playDipSound();
+                    pigmentLoreTitle.textContent = pigment.name;
+                    pigmentLoreDesc.textContent = pigment.source;
+                    floatingBlockName.textContent = pigment.name;
+                    floatingBlockIcon.textContent = pigment.icon;
+                    floatingBlockInkFace.style.backgroundColor = pigment.colorCode;
+                    floatingWoodblock.classList.remove('hidden');
+                    canvasGuideText.textContent = `→ Di chuyển chuột lên giấy Điệp và Click để dập màu [${pigment.name}]!`;
+                    renderInkTubsList();
+                });
+                inkTubsList.appendChild(div);
+            });
+        }
+
+        function setupInteractiveCanvas() {
+            paperCanvasBase.addEventListener('mousemove', (e) => {
+                if (!state.isInkLoaded) return;
+                const rect = paperCanvasBase.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                floatingWoodblock.style.left = `${x - 70}px`;
+                floatingWoodblock.style.top = `${y - 90}px`;
+            });
+
+            paperCanvasBase.addEventListener('mouseleave', () => {
+                if (state.isInkLoaded) floatingWoodblock.classList.add('hidden');
+            });
+
+            paperCanvasBase.addEventListener('mouseenter', () => {
+                if (state.isInkLoaded) floatingWoodblock.classList.remove('hidden');
+            });
+
+            paperCanvasBase.addEventListener('click', (e) => {
+                if (!state.isInkLoaded || state.selectedLayerIdx === null) {
+                    showToast('Vui lòng chọn thố mực và nhúng ván trước khi dập!');
+                    return;
+                }
+                const idx = state.selectedLayerIdx;
+                state.printedLayers[idx] = true;
+                
+                audio.playStampSound();
+                paperCanvasBase.classList.add('shake-active');
+                setTimeout(() => paperCanvasBase.classList.remove('shake-active'), 180);
+
+                floatingWoodblock.classList.add('stamp-press-fx');
+                setTimeout(() => floatingWoodblock.classList.remove('stamp-press-fx'), 320);
+
+                spawnSplashFX(e);
+                redrawMainCanvas();
+                renderInkTubsList();
+                updateProgressCount();
+
+                showToast(`Đã dập thành công lớp: ${DONG_HO_PIGMENTS[idx].name}!`);
+            });
+
+            document.getElementById('clearPaperBtn').addEventListener('click', () => {
+                state.printedLayers = [false, false, false, false, false];
+                state.selectedLayerIdx = null;
+                state.isInkLoaded = false;
+                floatingWoodblock.classList.add('hidden');
+                redrawMainCanvas();
+                renderInkTubsList();
+                updateProgressCount();
+                showToast('Đã làm sạch giấy Điệp!');
+            });
+
+            exportArtBtn.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.download = 'tranh-dong-ho-thien-ninh.png';
+                link.href = mainCanvas.toDataURL('image/png');
+                link.click();
+                showToast('Đã xuất file tranh thành công!');
+            });
+        }
+
+        function spawnSplashFX(e) {
+            const rect = paperCanvasBase.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const fxContainer = document.getElementById('fxContainer');
+            for(let i=0; i<12; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'absolute w-2 h-2 rounded-full animate-ping';
+                const color = DONG_HO_PIGMENTS[state.selectedLayerIdx]?.colorCode || '#e5aa1c';
+                particle.style.backgroundColor = color;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+                fxContainer.appendChild(particle);
+                setTimeout(() => particle.remove(), 600);
+            }
+        }
+
+        function updateProgressCount() {
+            const count = state.printedLayers.filter(Boolean).length;
+            stampProgressText.textContent = `Tiến độ: ${count}/5 màu`;
+            if (count === 5) {
+                exportArtBtn.removeAttribute('disabled');
+                canvasGuideText.textContent = '✨ Hoàn tất tác phẩm! Bạn có thể Xuất Tranh.';
+                audio.playWinSound();
+            } else {
+                exportArtBtn.setAttribute('disabled', 'true');
+            }
+        }
+
+        function redrawMainCanvas() {
+            mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+            DONG_HO_PIGMENTS.forEach((pigment, idx) => {
+                if (state.printedLayers[idx] && state.layerToggles[idx]) {
+                    pigment.draw(mainCtx, mainCanvas.width, mainCanvas.height, artworkImage);
+                }
+            });
+        }
+
+        function setupToggles() {
+            state.layerToggles.forEach((_, idx) => {
+                document.getElementById(`layerCheck${idx}`).addEventListener('change', (e) => {
+                    state.layerToggles[idx] = e.target.checked;
+                    redrawMainCanvas();
+                });
+            });
+        }
+
+        function setupCarvingMode() {
+            const carveCanvas = document.getElementById('carveCanvas');
+            const carveCtx = carveCanvas.getContext('2d');
+            const carveProgressBar = document.getElementById('carveProgressBar');
+            const carvePercent = document.getElementById('carvePercent');
+
+            let carvedPixels = 0;
+            const totalPixels = carveCanvas.width * carveCanvas.height;
+
+            function initWoodTexture() {
+                carveCtx.fillStyle = '#5c3a21';
+                carveCtx.fillRect(0, 0, carveCanvas.width, carveCanvas.height);
+                carveCtx.fillStyle = '#3b2211';
+                for(let i=0; i<carveCanvas.height; i+=8) {
+                    carveCtx.fillRect(0, i, carveCanvas.width, 3);
+                }
+                carveCtx.fillStyle = '#e5aa1c';
+                carveCtx.font = 'bold 24px Charm';
+                carveCtx.textAlign = 'center';
+                carveCtx.fillText('Mộc Bản Gỗ Thị - Đông Hồ', carveCanvas.width / 2, carveCanvas.height / 2);
+            }
+
+            initWoodTexture();
+
+            let isCarving = false;
+            carveCanvas.addEventListener('mousedown', () => isCarving = true);
+            window.addEventListener('mouseup', () => isCarving = false);
+            carveCanvas.addEventListener('mousemove', (e) => {
+                if (!isCarving && e.buttons !== 1) return;
+                const rect = carveCanvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * (carveCanvas.width / rect.width);
+                const y = (e.clientY - rect.top) * (carveCanvas.height / rect.height);
+
+                carveCtx.clearRect(x - 18, y - 18, 36, 36);
+                audio.playChiselSound();
+
+                carvedPixels += 1200;
+                let pct = Math.min(100, Math.floor((carvedPixels / totalPixels) * 100));
+                carvePercent.textContent = `${pct}%`;
+                carveProgressBar.style.width = `${pct}%`;
+            });
+
+            document.getElementById('resetCarveBtn').addEventListener('click', () => {
+                carvedPixels = 0;
+                initWoodTexture();
+                carvePercent.textContent = '0%';
+                carveProgressBar.style.width = '0%';
+                showToast('Đã thay ván gỗ mới!');
+            });
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+
